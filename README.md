@@ -1,6 +1,7 @@
-![Francisco](https://github.com/FranciscoObertoZarazaga/FranciscoObertoZarazaga/assets/95183980/b554dd85-dc63-4376-9f45-2fae17b84b4d)
+![Francisco(1)](https://github.com/FranciscoObertoZarazaga/FranciscoObertoZarazaga/assets/95183980/b061893b-5711-45d8-a1fa-a01b6527ba9a)
 
 ###
+
 
 <h3 align="left">I'm a full-stack developer, algorithmic trader, bachelor of applied sciences and computer engineering student.</h3>
 
