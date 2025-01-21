@@ -108,4 +108,6 @@
   <img src="https://github-readme-activity-graph.vercel.app/graph?username=FranciscoObertoZarazaga&radius=16&theme=react&area=true&order=5" height="300" alt="activity-graph graph"  />
 </div>
 
+[Diploma PHP y MYSQL.pdf](https://github.com/user-attachments/files/18484569/Diploma.PHP.y.MYSQL.pdf)
+
 ###
