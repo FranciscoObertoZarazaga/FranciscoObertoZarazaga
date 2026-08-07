@@ -580,7 +580,6 @@ def write_part(name, part):
 
 if __name__ == "__main__":
     profile_card()
-    contact_buttons()
     write_part("terminal.svg", terminal_part())
     write_part("pipeline.svg", pipeline_part())
     write_part("htop.svg", htop_part())
