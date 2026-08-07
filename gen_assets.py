@@ -4,6 +4,11 @@ GitHub renders SVGs referenced from a README as <img>, which allows CSS and
 SMIL animations embedded in the SVG but never JavaScript. Every asset here is
 therefore a self-contained, deterministic animation loop.
 
+The README uses three images (no HTML tables, so no table borders):
+  - profile-card.svg  full width
+  - left-col.svg      pipeline + compact 2x2 Grafana dashboard
+  - right-col.svg     terminal + htop + docker whale
+
 Run: python gen_assets.py  (writes into ./assets/)
 """
 import random
@@ -23,6 +28,7 @@ GREEN_DIM = "#2c5c49"
 AMBER = "#e3b341"
 ORANGE = "#d97757"
 MONO = "'Cascadia Code','SF Mono',Consolas,Menlo,monospace"
+COL_W = 546  # shared width of both README columns
 
 ICONS = {
     "github": '<symbol id="i-github" viewBox="0 0 48 48"><path fill="#e6edf3" d="M24 4a20 20 0 0 0-6.3 39c1 .2 1.4-.5 1.4-1v-3.8c-5.6 1.2-6.8-2.4-6.8-2.4-.9-2.3-2.2-3-2.2-3-1.8-1.2.1-1.2.1-1.2 2 .1 3.1 2.1 3.1 2.1 1.8 3 4.7 2.2 5.8 1.7.2-1.3.7-2.2 1.3-2.7-4.5-.5-9.2-2.2-9.2-9.9 0-2.2.8-4 2.1-5.4-.2-.5-.9-2.6.2-5.4 0 0 1.7-.5 5.5 2.1a19 19 0 0 1 10 0c3.8-2.6 5.5-2.1 5.5-2.1 1.1 2.8.4 4.9.2 5.4a7.8 7.8 0 0 1 2.1 5.4c0 7.7-4.7 9.4-9.2 9.9.7.6 1.4 1.9 1.4 3.8V42c0 .5.4 1.2 1.4 1A20 20 0 0 0 24 4z"/></symbol>',
@@ -36,7 +42,8 @@ ICONS = {
     "docker": '<symbol id="i-docker" viewBox="0 0 48 48"><g fill="#2496ed"><rect x="10" y="20" width="6" height="6" rx="1"/><rect x="17" y="20" width="6" height="6" rx="1"/><rect x="24" y="20" width="6" height="6" rx="1"/><rect x="17" y="13" width="6" height="6" rx="1"/><rect x="24" y="13" width="6" height="6" rx="1"/><rect x="24" y="6" width="6" height="6" rx="1"/><path d="M4 29h37c2 0 4-1.5 4-1.5s-2-2.8-5-2.5c-.4-2.4-2.5-3.5-2.5-3.5s-2.4 1.6-1.8 4c-9 0-31.7 0-31.7 0s-.6 8.5 8 11.5c9 3.2 20.5 1 26-6"/></g></symbol>',
     "playwright": '<symbol id="i-playwright" viewBox="0 0 24 24"><path d="M4 5.5c2.7 1.1 5.3 1.1 8-.4 2.7 1.5 5.3 1.5 8 .4v6.3c0 5-3.4 8.6-8 9.7-4.6-1.1-8-4.7-8-9.7z" fill="none" stroke="#45ba4b" stroke-width="1.8" stroke-linejoin="round"/><circle cx="8.7" cy="10.8" r="1.3" fill="#45ba4b"/><circle cx="15.3" cy="10.8" r="1.3" fill="#45ba4b"/><path d="M8.7 15c1 1.4 2.1 2 3.3 2s2.3-.6 3.3-2" fill="none" stroke="#45ba4b" stroke-width="1.7" stroke-linecap="round"/></symbol>',
     "k8s": '<symbol id="i-k8s" viewBox="0 0 48 48"><polygon fill="#326ce5" points="24,3 42,12 46,31 33,45 15,45 2,31 6,12"/><g stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round"><circle cx="24" cy="24" r="8"/><path d="M24 10v6M24 32v6M11 17l5.5 3.2M37 17l-5.5 3.2M14 36l4.5-4.5M34 36l-4.5-4.5"/></g></symbol>',
-    "gha": '<symbol id="i-gha" viewBox="0 0 48 48"><circle cx="19" cy="19" r="13" fill="none" stroke="#2088ff" stroke-width="3.5"/><path fill="#2088ff" d="M15.5 13.5l9 5.5-9 5.5z"/><circle cx="36" cy="34" r="6" fill="none" stroke="#2088ff" stroke-width="3"/><path d="M28.5 27.5 L31.5 30.5" stroke="#2088ff" stroke-width="3" stroke-linecap="round"/></symbol>',
+    "linkedin": '<symbol id="i-linkedin" viewBox="0 0 24 24"><rect width="24" height="24" rx="4" fill="#0a66c2"/><path fill="#fff" d="M17.6 17.6h-2.5v-3.9c0-.93-.02-2.13-1.3-2.13-1.3 0-1.5 1.02-1.5 2.06v3.97H9.8V9.6h2.39v1.09h.03c.33-.63 1.14-1.3 2.35-1.3 2.52 0 2.99 1.66 2.99 3.82v4.4zM7.06 8.5a1.44 1.44 0 1 1 0-2.88 1.44 1.44 0 0 1 0 2.88zM8.3 17.6H5.8V9.6h2.5v8z"/></symbol>',
+    "mail": '<symbol id="i-mail" viewBox="0 0 24 24"><path fill="none" stroke="#ea4335" stroke-width="1.8" d="M3 6.5h18v11H3z"/><path fill="none" stroke="#ea4335" stroke-width="1.8" d="m3 7 9 6.5L21 7"/></symbol>',
 }
 
 
@@ -48,12 +55,26 @@ def svg(w, h, style, body, defs=""):
     )
 
 
+def write_stack(name, parts, gap=30):
+    """Stack parts (dicts with css/defs/body/w/h) vertically into one SVG."""
+    width = max(p["w"] for p in parts)
+    css, defs, body, y = [], [], [], 0
+    for p in parts:
+        css.append(p["css"])
+        defs.append(p["defs"])
+        body.append(f'<g transform="translate(0,{y})">{p["body"]}</g>')
+        y += p["h"] + gap
+    (OUT / name).write_text(
+        svg(width, y - gap, "".join(css), "".join(body), "".join(defs)), encoding="utf-8"
+    )
+
+
 # ---------------------------------------------------------------- pipeline
-def build_pipeline():
+def pipeline_part():
     NW, NH, JOB_GAP, LINE_GAP = 150, 40, 14, 14
-    TOP, X0, TAB_W, CARD_W, CARD_PAD, CARD_GAP, INNER_GAP = 8, 8, 28, 530, 12, 40, 36
-    CYCLE = 12.0  # seconds; 6 stages x 1.5s + 3s all-green pause
-    STAGE_T = 1.5
+    TOP, X0, TAB_W, CARD_PAD, CARD_GAP, INNER_GAP = 8, 8, 28, 12, 40, 36
+    CARD_W = COL_W - 16
+    CYCLE, STAGE_T = 12.0, 1.5
 
     stages = [
         ("plan", "#57d9a3", [[("Issues", "github", None)]]),
@@ -110,7 +131,7 @@ def build_pipeline():
             for bx, by in placed_rows[i][1]:
                 y1, y2 = ay + NH, by
                 mid = (y1 + y2) / 2
-                edges.append((tc, f"M{ax} {y1} C{ax} {mid},{bx} {mid},{bx} {y2}", ax, y1, bx, y2, mid))
+                edges.append((tc, f"M{ax} {y1} C{ax} {mid},{bx} {mid},{bx} {y2}"))
 
     def pct(t):
         return round(t / CYCLE * 100, 2)
@@ -155,7 +176,7 @@ def build_pipeline():
                 f"animation:eop{c} {CYCLE}s linear infinite,dashmove .8s linear infinite}}"
             )
 
-    body = [f'<rect width="546" height="{total_h}" fill="{BG}"/>',
+    body = [f'<rect width="{COL_W}" height="{total_h}" rx="12" fill="{BG}"/>',
             '<rect width="0" height="0"><animate id="cyc" attributeName="x" values="0;0" '
             f'dur="{CYCLE}s" repeatCount="indefinite"/></rect>']
 
@@ -169,9 +190,9 @@ def build_pipeline():
         lx, ly = x + TAB_W / 2 + 3.5, y + h / 2
         body.append(f'<text x="{lx}" y="{ly}" class="tab-label" transform="rotate(-90 {lx} {ly})">{name}</text>')
 
-    for c, d, ax, y1, bx, y2, mid in edges:
+    for c, d in edges:
         body.append(f'<path d="{d}" class="ebase{c}"/>')
-    for c, d, ax, y1, bx, y2, mid in edges:
+    for c, d in edges:
         body.append(f'<path d="{d}" class="eflow{c}"/>')
         t = c * STAGE_T
         body.append(
@@ -206,12 +227,84 @@ def build_pipeline():
     defs = "".join(ICONS[k] for k in
                    ["github", "person", "claude", "anti", "tests", "sonar", "horusec", "copilot",
                     "docker", "playwright", "k8s"])
-    (OUT / "pipeline.svg").write_text(svg(546, total_h, "".join(css), "".join(body), defs), encoding="utf-8")
+    return dict(css="".join(css), defs=defs, body="".join(body), w=COL_W, h=total_h)
+
+
+# ---------------------------------------------------------------- dashboard (compact 2x2)
+def dashboard_part():
+    PW, PH, GX, GY = 267, 150, 12, 12
+    W, H = COL_W, PH * 2 + GY
+    css = [
+        f".h4{{font-size:10.5px;fill:{MUTED};letter-spacing:1px;text-transform:uppercase}}",
+        f".val{{font-size:21px;font-weight:700;fill:{GREEN}}}",
+        f".sub{{font-size:10.5px;fill:{MUTED}}}",
+        "@keyframes pulse{50%{opacity:.35}}",
+        f".dot{{fill:{GREEN};animation:pulse 2.2s ease-in-out infinite}}",
+        "@keyframes scroll{to{transform:translateX(-121px)}}",
+        ".spark{animation:scroll 5.2s linear infinite}",
+        "@keyframes gdraw{0%{stroke-dashoffset:151}18%,100%{stroke-dashoffset:3}}",
+        f".garc{{fill:none;stroke:{GREEN};stroke-width:9;stroke-linecap:round;stroke-dasharray:151;"
+        "animation:gdraw 12s ease-out infinite}",
+        "@keyframes shimmer{to{transform:translateX(285px)}}",
+        ".shim{animation:shimmer 2.8s linear infinite}",
+    ]
+    body = []
+    random.seed(7)
+    pos = [(0, 0), (PW + GX, 0), (0, PH + GY), (PW + GX, PH + GY)]
+
+    def panel(i, title):
+        x, y = pos[i]
+        body.append(f'<rect x="{x}" y="{y}" width="{PW}" height="{PH}" rx="8" fill="{SURFACE}" stroke="{BORDER}"/>')
+        body.append(f'<circle cx="{x + 18}" cy="{y + 19}" r="3.5" class="dot"/>')
+        body.append(f'<text x="{x + 30}" y="{y + 23}" class="h4">{title}</text>')
+        return x, y
+
+    x, y = panel(0, "commits &#183; week")
+    body.append(f'<text x="{x + 16}" y="{y + 52}" class="val">34</text>')
+    base = [random.uniform(18, 40) for _ in range(28)]
+    pts_all = base + base
+    step = 4.32
+    pl = " ".join(f"{x + 8 + i * step:.1f},{y + PH - 12 - v * 1.7:.1f}" for i, v in enumerate(pts_all))
+    body.append(f'<clipPath id="spc"><rect x="{x + 8}" y="{y + 60}" width="{PW - 20}" height="{PH - 70}"/></clipPath>')
+    body.append(f'<g clip-path="url(#spc)"><g class="spark">'
+                f'<polyline points="{pl}" fill="none" stroke="{GREEN}" stroke-width="1.6"/></g>'
+                f'<circle cx="{x + PW - 16}" cy="{y + PH - 12 - pts_all[25] * 1.7:.1f}" r="3" fill="{GREEN}"/></g>')
+
+    x, y = panel(1, "code quality")
+    cx, cy, r = x + PW / 2, y + 122, 48
+    body.append(f'<path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}" fill="none" stroke="{BORDER}" '
+                f'stroke-width="9" stroke-linecap="round"/>')
+    body.append(f'<path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}" class="garc"/>')
+    body.append(f'<text x="{cx}" y="{cy - 14}" text-anchor="middle" class="val">98.2%</text>')
+    body.append(f'<text x="{cx}" y="{cy + 2}" text-anchor="middle" class="sub">sonarqube gate: passed</text>')
+
+    x, y = panel(2, "uptime")
+    body.append(f'<text x="{x + 16}" y="{y + 58}" class="val">6y+ shipping</text>')
+    body.append(f'<text x="{x + 16}" y="{y + 80}" class="sub">since first commit &#183; 2020</text>')
+    bw = PW - 32
+    body.append(f'<rect x="{x + 16}" y="{y + 98}" width="{bw}" height="7" rx="3.5" fill="{SURFACE2}"/>')
+    body.append(f'<clipPath id="upc"><rect x="{x + 16}" y="{y + 98}" width="{bw - .4}" height="7" rx="3.5"/></clipPath>')
+    body.append(f'<g clip-path="url(#upc)"><rect x="{x + 16}" y="{y + 98}" width="{bw}" height="7" fill="{GREEN_DIM}"/>'
+                f'<rect x="{x - 50}" y="{y + 98}" width="50" height="7" fill="{GREEN}" opacity=".6" class="shim"/></g>')
+    body.append(f'<text x="{x + 16}" y="{y + 124}" class="sub">availability 99.98%</text>')
+
+    x, y = panel(3, "deploys &#183; month")
+    body.append(f'<text x="{x + 16}" y="{y + 52}" class="val">24</text>')
+    heights = [random.uniform(16, 74) for _ in range(10)]
+    for i, hh in enumerate(heights):
+        bx = x + 14 + i * 24
+        color = GREEN if i == 9 else "rgba(87,217,163,.45)"
+        css.append(f"@keyframes bar{i}{{0%{{transform:scaleY(0)}}{8 + i * 3}%{{transform:scaleY(0)}}"
+                   f"{20 + i * 3}%,100%{{transform:scaleY(1)}}}}")
+        body.append(f'<rect x="{bx}" y="{y + PH - 12 - hh:.1f}" width="16" height="{hh:.1f}" rx="2" fill="{color}" '
+                    f'style="transform-origin:0 {y + PH - 12}px;animation:bar{i} 10s ease-out infinite"/>')
+
+    return dict(css="".join(css), defs="", body="".join(body), w=W, h=H)
 
 
 # ---------------------------------------------------------------- terminal
-def build_terminal():
-    W, H, CYCLE = 460, 262, 16.0
+def terminal_part():
+    W, H, CYCLE = COL_W, 262, 16.0
     lines = [
         ("cmd", "whoami"),
         ("out", "Fran Oberto — Computer Engineer"),
@@ -231,7 +324,7 @@ def build_terminal():
     ]
     body = [
         f'<rect width="{W}" height="{H}" rx="10" fill="{SURFACE}" stroke="{BORDER}"/>',
-        f'<rect x="1" y="1" width="{W - 2}" height="30" fill="{SURFACE2}"/>',
+        f'<path d="M1 11 Q1 1 11 1 L{W - 11} 1 Q{W - 1} 1 {W - 1} 11 L{W - 1} 31 L1 31 Z" fill="{SURFACE2}"/>',
         f'<line x1="1" y1="31" x2="{W - 1}" y2="31" stroke="{BORDER}"/>',
         f'<circle cx="18" cy="16" r="5" fill="{GREEN}"/><circle cx="34" cy="16" r="5" fill="{BORDER}"/>'
         f'<circle cx="50" cy="16" r="5" fill="{BORDER}"/>',
@@ -251,12 +344,12 @@ def build_terminal():
             t += 0.9
     body.append(f'<text x="18" y="{56 + len(lines) * 25}" class="p">$</text>'
                 f'<rect x="34" y="{44 + len(lines) * 25}" width="8" height="15" class="caret"/>')
-    (OUT / "terminal.svg").write_text(svg(W, H, "".join(css), "".join(body)), encoding="utf-8")
+    return dict(css="".join(css), defs="", body="".join(body), w=W, h=H)
 
 
 # ---------------------------------------------------------------- htop
-def build_htop():
-    W, H = 460, 348
+def htop_part():
+    W, H = COL_W, 348
     cores = [("backend", 64, 2.3), ("devops", 48, 3.1), ("quality", 38, 2.7), ("ai-tools", 55, 3.6)]
     procs = [
         (1, "fran", "42.0", "47.3", "18.2", "51000h", "python api/main.py", False),
@@ -285,8 +378,8 @@ def build_htop():
     body = [f'<rect width="{W}" height="{H}" rx="10" fill="{SURFACE}" stroke="{BORDER}"/>']
     for i, (name, base, dur) in enumerate(cores):
         col, row = i % 2, i // 2
-        x, y = 16 + col * 224, 18 + row * 22
-        bw = 118
+        x, y = 16 + col * 268, 18 + row * 22
+        bw = 150
         color = GREEN if base < 50 else AMBER
         css.append(
             f"@keyframes core{i}{{from{{transform:scaleX({base / 100})}}to{{transform:scaleX({min(.96, base / 100 + .22)})}}}}"
@@ -296,155 +389,82 @@ def build_htop():
             f'<rect x="{x + 62}" y="{y}" width="{bw}" height="10" rx="2" fill="{SURFACE2}" stroke="{BORDER}"/>'
             f'<rect x="{x + 62}" y="{y}" width="{bw}" height="10" rx="2" fill="{color}" '
             f'style="transform-origin:{x + 62}px 0;animation:core{i} {dur}s ease-in-out infinite alternate"/>'
-            f'<text x="{x + 188}" y="{y + 10}" class="pct">{base}%</text>'
+            f'<text x="{x + 220}" y="{y + 10}" class="pct">{base}%</text>'
         )
-        if col == 1:
-            pass
     body.append(
         f'<text x="16" y="72" class="meta">Load average: <tspan class="metav">0.99 0.98 0.97</tspan>'
         f'  Uptime: <tspan class="metav">2350 days</tspan>  Tasks: <tspan class="metav">6</tspan></text>'
     )
     body.append(f'<line x1="1" y1="82" x2="{W - 1}" y2="82" stroke="{BORDER}"/>')
     body.append(f'<rect x="1" y="83" width="{W - 2}" height="22" fill="rgba(87,217,163,.08)"/>')
-    headers = [(16, "PID"), (58, "USER"), (104, "CPU%"), (148, "MEM%"), (196, "TIME+"), (268, "COMMAND")]
+    headers = [(16, "PID"), (60, "USER"), (110, "CPU%"), (158, "MEM%"), (210, "TIME+"), (290, "COMMAND")]
     body.append("".join(f'<text x="{hx}" y="98" class="rh">{ht}</text>' for hx, ht in headers))
     for i, (pid, user, cpu_a, cpu_b, mem, tim, cmd, kernel) in enumerate(procs):
         y = 124 + i * 24
         cls = "rk" if kernel else "rc"
         row = [
             f'<text x="16" y="{y}" class="{cls}">{pid}</text>',
-            f'<text x="58" y="{y}" class="{cls}">{user}</text>',
+            f'<text x="60" y="{y}" class="{cls}">{user}</text>',
         ]
         if kernel:
-            row.append(f'<text x="104" y="{y}" class="rk">{cpu_a}</text>')
+            row.append(f'<text x="110" y="{y}" class="rk">{cpu_a}</text>')
         else:
             d = i * 0.6
-            row.append(f'<text x="104" y="{y}" class="rc" style="animation:swapA 4s linear infinite;animation-delay:-{d}s">{cpu_a}</text>')
-            row.append(f'<text x="104" y="{y}" class="rc" style="animation:swapB 4s linear infinite;animation-delay:-{d}s">{cpu_b}</text>')
-        row.append(f'<text x="148" y="{y}" class="{cls}">{mem}</text>')
-        row.append(f'<text x="196" y="{y}" class="{cls}">{tim}</text>')
-        row.append(f'<text x="268" y="{y}" class="{cls}">{cmd}</text>')
+            row.append(f'<text x="110" y="{y}" class="rc" style="animation:swapA 4s linear infinite;animation-delay:-{d}s">{cpu_a}</text>')
+            row.append(f'<text x="110" y="{y}" class="rc" style="animation:swapB 4s linear infinite;animation-delay:-{d}s">{cpu_b}</text>')
+        row.append(f'<text x="158" y="{y}" class="{cls}">{mem}</text>')
+        row.append(f'<text x="210" y="{y}" class="{cls}">{tim}</text>')
+        row.append(f'<text x="290" y="{y}" class="{cls}">{cmd}</text>')
         body.append("".join(row))
     gy = 124 + len(procs) * 24
-    body.append(f'<g class="ga"><text x="16" y="{gy}" class="rt">4821</text><text x="58" y="{gy}" class="rt">fran</text>'
-                f'<text x="104" y="{gy}" class="rt">71.4</text><text x="148" y="{gy}" class="rt">2.1</text>'
-                f'<text x="196" y="{gy}" class="rt">0:00:02</text><text x="268" y="{gy}" class="rt">git push origin main</text></g>')
+    body.append(f'<g class="ga"><text x="16" y="{gy}" class="rt">4821</text><text x="60" y="{gy}" class="rt">fran</text>'
+                f'<text x="110" y="{gy}" class="rt">71.4</text><text x="158" y="{gy}" class="rt">2.1</text>'
+                f'<text x="210" y="{gy}" class="rt">0:00:02</text><text x="290" y="{gy}" class="rt">git push origin main</text></g>')
     fy = H - 14
     body.append(f'<line x1="1" y1="{fy - 18}" x2="{W - 1}" y2="{fy - 18}" stroke="{BORDER}"/>')
     fx = 16
     for key, lab in [("F1", "Help"), ("F5", "Tree"), ("F6", "SortBy"), ("F9", "Kill"), ("F10", "Quit")]:
-        body.append(f'<rect x="{fx}" y="{fy - 11}" width="22" height="14" rx="2" fill="{GREEN}"/>'
+        body.append(f'<rect x="{fx}" y="{fy - 11}" width="24" height="14" rx="2" fill="{GREEN}"/>'
                     f'<text x="{fx + 3}" y="{fy}" class="fkb">{key}</text>'
-                    f'<text x="{fx + 26}" y="{fy}" class="fk">{lab}</text>')
-        fx += 78
-    (OUT / "htop.svg").write_text(svg(W, H, "".join(css), "".join(body)), encoding="utf-8")
+                    f'<text x="{fx + 28}" y="{fy}" class="fk">{lab}</text>')
+        fx += 96
+    return dict(css="".join(css), defs="", body="".join(body), w=W, h=H)
 
 
 # ---------------------------------------------------------------- whale
-def build_whale():
+def whale_part(rows):
     random.seed(42)
-    COLS, ROWS, CELL, GAP, PAD = 26, 12, 12, 4, 14
-    W = PAD * 2 + COLS * (CELL + GAP) - GAP
-    H = PAD * 2 + ROWS * (CELL + GAP) - GAP
+    COLS, CELL, GAP, PAD = 30, 13, 4, 20
+    W = PAD * 2 + COLS * (CELL + GAP) - GAP  # = 546 with these numbers
+    H = PAD * 2 + rows * (CELL + GAP) - GAP
     blues = ["#0b3a5e", "#0e5a94", "#1d84d0", "#48b2f2"]
     body = [f'<rect width="{W}" height="{H}" rx="12" fill="{SURFACE}" stroke="{BORDER}"/>']
     for c in range(COLS):
-        for r in range(ROWS):
+        for r in range(rows):
             x = PAD + c * (CELL + GAP)
             y = PAD + r * (CELL + GAP)
             fill = random.choice(blues) if random.random() < 0.72 else SURFACE2
             body.append(f'<rect x="{x}" y="{y}" width="{CELL}" height="{CELL}" rx="3" fill="{fill}"/>')
     pts = []
-    for r in range(ROWS):
+    for r in range(rows):
         y = PAD + r * (CELL + GAP) + CELL / 2
         xs = [PAD + CELL / 2, PAD + (COLS - 1) * (CELL + GAP) + CELL / 2]
         if r % 2:
             xs.reverse()
         pts.append(f"{'M' if r == 0 else 'L'}{xs[0]} {y} L{xs[1]} {y}")
     path = " ".join(pts)
-    dur = 40
+    dur = 30 + rows * 2
+    body_anim = []
     for delay, r, op in [(0.0, 5, .18), (0.35, 5, .3)]:
-        body.append(f'<circle r="{r}" fill="#e6f0fa" opacity="{op}">'
-                    f'<animateMotion path="{path}" dur="{dur}s" begin="-{dur - delay}s" repeatCount="indefinite"/></circle>')
-    body.append(f'<text font-size="16" text-anchor="middle" dy="5">'
-                f'<animateMotion path="{path}" dur="{dur}s" begin="-{dur - 0.7}s" repeatCount="indefinite"/>🐳</text>')
-    (OUT / "whale.svg").write_text(svg(W, H, "", "".join(body)), encoding="utf-8")
-
-
-# ---------------------------------------------------------------- dashboard
-def build_dashboard():
-    W, H = 920, 176
-    PW, GAPX = 221, 12
-    css = [
-        f".h4{{font-size:10.5px;fill:{MUTED};letter-spacing:1px;text-transform:uppercase}}",
-        f".val{{font-size:22px;font-weight:700;fill:{GREEN}}}",
-        f".sub{{font-size:10.5px;fill:{MUTED}}}",
-        "@keyframes pulse{50%{opacity:.35}}",
-        f".dot{{fill:{GREEN};animation:pulse 2.2s ease-in-out infinite}}",
-        "@keyframes scroll{to{transform:translateX(-104px)}}",
-        ".spark{animation:scroll 5.2s linear infinite}",
-        "@keyframes pop{0%{r:3}50%{r:4.5}100%{r:3}}",
-        f".tip{{fill:{GREEN};animation:pop 1.4s ease-in-out infinite}}",
-        "@keyframes gdraw{0%{stroke-dashoffset:163}18%,100%{stroke-dashoffset:3}}",
-        f".garc{{fill:none;stroke:{GREEN};stroke-width:9;stroke-linecap:round;stroke-dasharray:163;"
-        "animation:gdraw 12s ease-out infinite}",
-        "@keyframes shimmer{to{transform:translateX(190px)}}",
-        ".shim{animation:shimmer 2.8s linear infinite}",
-    ]
-    body = []
-    random.seed(7)
-
-    def panel(i, title):
-        x = i * (PW + GAPX)
-        body.append(f'<rect x="{x}" y="1" width="{PW}" height="{H - 2}" rx="8" fill="{SURFACE}" stroke="{BORDER}"/>')
-        body.append(f'<circle cx="{x + 18}" cy="20" r="3.5" class="dot"/>')
-        body.append(f'<text x="{x + 30}" y="24" class="h4">{title}</text>')
-        return x
-
-    x = panel(0, "commits &#183; week")
-    body.append(f'<text x="{x + 16}" y="56" class="val">34</text>')
-    base = [random.uniform(18, 40) for _ in range(28)]
-    pts_all = base + base
-    step = 208 / 26
-    pl = " ".join(f"{x + 8 + i * step:.1f},{160 - v * 2.2:.1f}" for i, v in enumerate(pts_all))
-    body.append(f'<clipPath id="spc"><rect x="{x + 8}" y="66" width="205" height="100"/></clipPath>')
-    body.append(f'<g clip-path="url(#spc)"><g class="spark">'
-                f'<polyline points="{pl}" fill="none" stroke="{GREEN}" stroke-width="1.6"/></g>'
-                f'<circle cx="{x + 205}" cy="{160 - pts_all[25] * 2.2:.1f}" r="3" class="tip"/></g>')
-
-    x = panel(1, "code quality")
-    cx, cy, r = x + PW / 2, 140, 52
-    body.append(f'<path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}" fill="none" stroke="{BORDER}" '
-                f'stroke-width="9" stroke-linecap="round"/>')
-    body.append(f'<path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}" class="garc"/>')
-    body.append(f'<text x="{cx}" y="{cy - 14}" text-anchor="middle" class="val">98.2%</text>')
-    body.append(f'<text x="{cx}" y="{cy + 2}" text-anchor="middle" class="sub">sonarqube gate: passed</text>')
-
-    x = panel(2, "uptime")
-    body.append(f'<text x="{x + 16}" y="66" class="val">6y+ shipping</text>')
-    body.append(f'<text x="{x + 16}" y="88" class="sub">since first commit &#183; 2020</text>')
-    body.append(f'<rect x="{x + 16}" y="110" width="189" height="7" rx="3.5" fill="{SURFACE2}"/>')
-    body.append(f'<clipPath id="upc"><rect x="{x + 16}" y="110" width="188.6" height="7" rx="3.5"/></clipPath>')
-    body.append(f'<g clip-path="url(#upc)"><rect x="{x + 16}" y="110" width="189" height="7" fill="{GREEN_DIM}"/>'
-                f'<rect x="{x - 50}" y="110" width="50" height="7" fill="{GREEN}" opacity=".6" class="shim"/></g>')
-    body.append(f'<text x="{x + 16}" y="136" class="sub">availability 99.98%</text>')
-
-    x = panel(3, "deploys &#183; month")
-    body.append(f'<text x="{x + 16}" y="56" class="val">24</text>')
-    heights = [random.uniform(18, 88) for _ in range(10)]
-    for i, hh in enumerate(heights):
-        bx = x + 14 + i * 20
-        color = GREEN if i == 9 else "rgba(87,217,163,.45)"
-        css.append(f"@keyframes bar{i}{{0%{{transform:scaleY(0)}}{8 + i * 3}%{{transform:scaleY(0)}}"
-                   f"{20 + i * 3}%,100%{{transform:scaleY(1)}}}}")
-        body.append(f'<rect x="{bx}" y="{162 - hh:.1f}" width="13" height="{hh:.1f}" rx="2" fill="{color}" '
-                    f'style="transform-origin:0 162px;animation:bar{i} 10s ease-out infinite"/>')
-
-    (OUT / "dashboard.svg").write_text(svg(W, H, "".join(css), "".join(body)), encoding="utf-8")
+        body_anim.append(f'<circle r="{r}" fill="#e6f0fa" opacity="{op}">'
+                         f'<animateMotion path="{path}" dur="{dur}s" begin="-{dur - delay}s" repeatCount="indefinite"/></circle>')
+    body_anim.append(f'<text font-size="17" text-anchor="middle" dy="6">'
+                     f'<animateMotion path="{path}" dur="{dur}s" begin="-{dur - 0.7}s" repeatCount="indefinite"/>🐳</text>')
+    return dict(css="", defs="", body="".join(body + body_anim), w=W, h=H)
 
 
 # ---------------------------------------------------------------- profile card
-def build_profile_card():
+def profile_card():
     W, H = 920, 320
     avatar = (Path(__file__).parent / "assets" / ".avatar.b64").read_text().strip()
     phrases = ["Computer Engineer", "Backend · Python", "DevOps · Kubernetes · Docker",
@@ -453,7 +473,7 @@ def build_profile_card():
     css = [
         f".name{{font-size:28px;font-weight:700;fill:{TEXT};font-family:-apple-system,'Segoe UI',sans-serif}}",
         f".typ{{font-size:15px;fill:{GREEN}}}",
-        f".links{{font-size:12px;fill:{MUTED}}}",
+        f".btn-t{{font-size:12px;fill:{TEXT}}}",
         "@keyframes blink{50%{opacity:0}}",
         f".caret{{fill:{GREEN};animation:blink .9s steps(1) infinite}}",
         "@keyframes pulse{50%{opacity:.35}}",
@@ -505,7 +525,7 @@ def build_profile_card():
         f'<stop offset="1" stop-color="{ORANGE}"/></linearGradient>',
         f'<rect width="{W}" height="3" fill="url(#topline)"/>',
     ]
-    ax, ay = 210, 118
+    ax, ay = 210, 112
     body.append(f'<circle cx="{ax}" cy="{ay}" r="56" fill="none" stroke="{GREEN}" stroke-width="3" '
                 f'stroke-dasharray="60 30" stroke-linecap="round">'
                 f'<animateTransform attributeName="transform" type="rotate" from="0 {ax} {ay}" to="360 {ax} {ay}" '
@@ -513,13 +533,23 @@ def build_profile_card():
     body.append(f'<clipPath id="avc"><circle cx="{ax}" cy="{ay}" r="47"/></clipPath>')
     body.append(f'<image href="data:image/jpeg;base64,{avatar}" x="{ax - 47}" y="{ay - 47}" width="94" height="94" '
                 f'clip-path="url(#avc)"/>')
-    body.append(f'<text x="{ax}" y="208" text-anchor="middle" class="name">Fran Oberto</text>')
+    body.append(f'<text x="{ax}" y="200" text-anchor="middle" class="name">Fran Oberto</text>')
     for i, ph in enumerate(phrases):
         pw = len(ph) * 9
-        body.append(f'<g class="ph{i}"><text x="{ax}" y="236" text-anchor="middle" class="typ">{ph}</text>'
-                    f'<rect x="{ax + pw / 2 + 6}" y="222" width="8" height="16" class="caret"/></g>')
-    body.append(f'<text x="{ax}" y="272" text-anchor="middle" class="links">in/franciscoobertozarazaga &#183; '
-                f'franobertozarazaga@gmail.com</text>')
+        body.append(f'<g class="ph{i}"><text x="{ax}" y="228" text-anchor="middle" class="typ">{ph}</text>'
+                    f'<rect x="{ax + pw / 2 + 6}" y="214" width="8" height="16" class="caret"/></g>')
+
+    # contact pills, styled like the mockup's .contact buttons
+    def pill(cx_center, y, w, icon, label, text_x_off):
+        x = cx_center - w / 2
+        return (f'<rect x="{x}" y="{y}" width="{w}" height="30" rx="15" fill="{SURFACE2}" stroke="{BORDER}"/>'
+                f'<use href="#i-{icon}" x="{x + 14}" y="{y + 7}" width="16" height="16"/>'
+                f'<text x="{x + text_x_off}" y="{y + 20}" class="btn-t">{label}</text>')
+
+    gap, w1, w2 = 12, 112, 94
+    total = w1 + gap + w2
+    body.append(pill(ax - total / 2 + w1 / 2, 250, w1, "linkedin", "LinkedIn", 38))
+    body.append(pill(ax + total / 2 - w2 / 2, 250, w2, "mail", "Email", 38))
 
     cx0, cy0, cw, ch = 440, 24, 456, 272
     body.append(f'<rect x="{cx0}" y="{cy0}" width="{cw}" height="{ch}" rx="10" fill="#0d1420" stroke="{BORDER}"/>')
@@ -539,14 +569,25 @@ def build_profile_card():
         body.append(f'<text x="{cx0 + 32}" y="{sy}" class="ccs vb{i}">{v}&#8230;</text>')
     body.append(f'<text x="{cx0 + 128}" y="{sy}" class="ccm">(esc to interrupt &#183; &#8593; 3.1k tokens)</text>')
 
-    (OUT / "profile-card.svg").write_text(svg(W, H, "".join(css), "".join(body)), encoding="utf-8")
+    (OUT / "profile-card.svg").write_text(
+        svg(W, H, "".join(css), "".join(body), ICONS["linkedin"] + ICONS["mail"]), encoding="utf-8"
+    )
 
 
 if __name__ == "__main__":
-    build_pipeline()
-    build_terminal()
-    build_htop()
-    build_whale()
-    build_dashboard()
-    build_profile_card()
-    print("assets generated:", sorted(p.name for p in OUT.glob("*.svg")))
+    profile_card()
+    pipe = pipeline_part()
+    dash = dashboard_part()
+    left_h = pipe["h"] + 30 + dash["h"]
+    write_stack("left-col.svg", [pipe, dash])
+
+    term = terminal_part()
+    htop = htop_part()
+    # pick whale rows so both columns end at (almost) the same height
+    fixed = term["h"] + 30 + htop["h"] + 30
+    cell = 17  # CELL + GAP
+    rows = max(6, round((left_h - fixed - 40 + 4) / cell))
+    write_stack("right-col.svg", [term, htop, whale_part(rows)])
+
+    right_h = fixed + whale_part(rows)["h"]
+    print(f"left-col: {left_h}px  right-col: {right_h}px  (whale rows={rows})")
