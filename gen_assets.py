@@ -4,10 +4,8 @@ GitHub renders SVGs referenced from a README as <img>, which allows CSS and
 SMIL animations embedded in the SVG but never JavaScript. Every asset here is
 therefore a self-contained, deterministic animation loop.
 
-The README uses three images (no HTML tables, so no table borders):
-  - profile-card.svg  full width
-  - left-col.svg      pipeline + compact 2x2 Grafana dashboard
-  - right-col.svg     terminal + htop + docker whale
+The README stacks full-width blocks (no HTML tables, so no table borders):
+profile-card, terminal, pipeline, htop, dashboard, whale.
 
 Run: python gen_assets.py  (writes into ./assets/)
 """
@@ -28,7 +26,7 @@ GREEN_DIM = "#2c5c49"
 AMBER = "#e3b341"
 ORANGE = "#d97757"
 MONO = "'Cascadia Code','SF Mono',Consolas,Menlo,monospace"
-COL_W = 546  # shared width of both README columns
+COL_W = 920  # shared width of every stacked README block
 
 ICONS = {
     "github": '<symbol id="i-github" viewBox="0 0 48 48"><path fill="#e6edf3" d="M24 4a20 20 0 0 0-6.3 39c1 .2 1.4-.5 1.4-1v-3.8c-5.6 1.2-6.8-2.4-6.8-2.4-.9-2.3-2.2-3-2.2-3-1.8-1.2.1-1.2.1-1.2 2 .1 3.1 2.1 3.1 2.1 1.8 3 4.7 2.2 5.8 1.7.2-1.3.7-2.2 1.3-2.7-4.5-.5-9.2-2.2-9.2-9.9 0-2.2.8-4 2.1-5.4-.2-.5-.9-2.6.2-5.4 0 0 1.7-.5 5.5 2.1a19 19 0 0 1 10 0c3.8-2.6 5.5-2.1 5.5-2.1 1.1 2.8.4 4.9.2 5.4a7.8 7.8 0 0 1 2.1 5.4c0 7.7-4.7 9.4-9.2 9.9.7.6 1.4 1.9 1.4 3.8V42c0 .5.4 1.2 1.4 1A20 20 0 0 0 24 4z"/></symbol>',
@@ -230,27 +228,27 @@ def pipeline_part():
     return dict(css="".join(css), defs=defs, body="".join(body), w=COL_W, h=total_h)
 
 
-# ---------------------------------------------------------------- dashboard (compact 2x2)
+# ---------------------------------------------------------------- dashboard (4 across)
 def dashboard_part():
-    PW, PH, GX, GY = 267, 150, 12, 12
-    W, H = COL_W, PH * 2 + GY
+    PW, PH, GX, GY = 221, 176, 12, 12
+    W, H = COL_W, PH
     css = [
         f".h4{{font-size:10.5px;fill:{MUTED};letter-spacing:1px;text-transform:uppercase}}",
         f".val{{font-size:21px;font-weight:700;fill:{GREEN}}}",
         f".sub{{font-size:10.5px;fill:{MUTED}}}",
         "@keyframes pulse{50%{opacity:.35}}",
         f".dot{{fill:{GREEN};animation:pulse 2.2s ease-in-out infinite}}",
-        "@keyframes scroll{to{transform:translateX(-121px)}}",
-        ".spark{animation:scroll 5.2s linear infinite}",
+        "@keyframes scroll{to{transform:translateX(-207px)}}",
+        ".spark{animation:scroll 6.5s linear infinite}",
         "@keyframes gdraw{0%{stroke-dashoffset:151}18%,100%{stroke-dashoffset:3}}",
         f".garc{{fill:none;stroke:{GREEN};stroke-width:9;stroke-linecap:round;stroke-dasharray:151;"
         "animation:gdraw 12s ease-out infinite}",
-        "@keyframes shimmer{to{transform:translateX(285px)}}",
+        "@keyframes shimmer{to{transform:translateX(239px)}}",
         ".shim{animation:shimmer 2.8s linear infinite}",
     ]
     body = []
     random.seed(7)
-    pos = [(0, 0), (PW + GX, 0), (0, PH + GY), (PW + GX, PH + GY)]
+    pos = [((PW + GX) * i, 0) for i in range(4)]
 
     def panel(i, title):
         x, y = pos[i]
@@ -263,7 +261,7 @@ def dashboard_part():
     body.append(f'<text x="{x + 16}" y="{y + 52}" class="val">34</text>')
     base = [random.uniform(18, 40) for _ in range(28)]
     pts_all = base + base
-    step = 4.32
+    step = 7.4
     pl = " ".join(f"{x + 8 + i * step:.1f},{y + PH - 12 - v * 1.7:.1f}" for i, v in enumerate(pts_all))
     body.append(f'<clipPath id="spc"><rect x="{x + 8}" y="{y + 60}" width="{PW - 20}" height="{PH - 70}"/></clipPath>')
     body.append(f'<g clip-path="url(#spc)"><g class="spark">'
@@ -271,7 +269,7 @@ def dashboard_part():
                 f'<circle cx="{x + PW - 16}" cy="{y + PH - 12 - pts_all[25] * 1.7:.1f}" r="3" fill="{GREEN}"/></g>')
 
     x, y = panel(1, "code quality")
-    cx, cy, r = x + PW / 2, y + 122, 48
+    cx, cy, r = x + PW / 2, y + 140, 48
     body.append(f'<path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}" fill="none" stroke="{BORDER}" '
                 f'stroke-width="9" stroke-linecap="round"/>')
     body.append(f'<path d="M{cx - r} {cy} A{r} {r} 0 0 1 {cx + r} {cy}" class="garc"/>')
@@ -378,8 +376,8 @@ def htop_part():
     body = [f'<rect width="{W}" height="{H}" rx="10" fill="{SURFACE}" stroke="{BORDER}"/>']
     for i, (name, base, dur) in enumerate(cores):
         col, row = i % 2, i // 2
-        x, y = 16 + col * 268, 18 + row * 22
-        bw = 150
+        x, y = 16 + col * 460, 18 + row * 22
+        bw = 300
         color = GREEN if base < 50 else AMBER
         css.append(
             f"@keyframes core{i}{{from{{transform:scaleX({base / 100})}}to{{transform:scaleX({min(.96, base / 100 + .22)})}}}}"
@@ -389,7 +387,7 @@ def htop_part():
             f'<rect x="{x + 62}" y="{y}" width="{bw}" height="10" rx="2" fill="{SURFACE2}" stroke="{BORDER}"/>'
             f'<rect x="{x + 62}" y="{y}" width="{bw}" height="10" rx="2" fill="{color}" '
             f'style="transform-origin:{x + 62}px 0;animation:core{i} {dur}s ease-in-out infinite alternate"/>'
-            f'<text x="{x + 220}" y="{y + 10}" class="pct">{base}%</text>'
+            f'<text x="{x + 372}" y="{y + 10}" class="pct">{base}%</text>'
         )
     body.append(
         f'<text x="16" y="72" class="meta">Load average: <tspan class="metav">0.99 0.98 0.97</tspan>'
@@ -432,10 +430,10 @@ def htop_part():
 
 
 # ---------------------------------------------------------------- whale
-def whale_part(rows):
+def whale_part(rows=7):
     random.seed(42)
-    COLS, CELL, GAP, PAD = 30, 13, 4, 20
-    W = PAD * 2 + COLS * (CELL + GAP) - GAP  # = 546 with these numbers
+    COLS, CELL, GAP, PAD = 52, 13, 4, 20
+    W = PAD * 2 + COLS * (CELL + GAP) - GAP  # = 920 with these numbers
     H = PAD * 2 + rows * (CELL + GAP) - GAP
     blues = ["#0b3a5e", "#0e5a94", "#1d84d0", "#48b2f2"]
     body = [f'<rect width="{W}" height="{H}" rx="12" fill="{SURFACE}" stroke="{BORDER}"/>']
@@ -539,18 +537,6 @@ def profile_card():
         body.append(f'<g class="ph{i}"><text x="{ax}" y="228" text-anchor="middle" class="typ">{ph}</text>'
                     f'<rect x="{ax + pw / 2 + 6}" y="214" width="8" height="16" class="caret"/></g>')
 
-    # contact pills, styled like the mockup's .contact buttons
-    def pill(cx_center, y, w, icon, label, text_x_off):
-        x = cx_center - w / 2
-        return (f'<rect x="{x}" y="{y}" width="{w}" height="30" rx="15" fill="{SURFACE2}" stroke="{BORDER}"/>'
-                f'<use href="#i-{icon}" x="{x + 14}" y="{y + 7}" width="16" height="16"/>'
-                f'<text x="{x + text_x_off}" y="{y + 20}" class="btn-t">{label}</text>')
-
-    gap, w1, w2 = 12, 112, 94
-    total = w1 + gap + w2
-    body.append(pill(ax - total / 2 + w1 / 2, 250, w1, "linkedin", "LinkedIn", 38))
-    body.append(pill(ax + total / 2 - w2 / 2, 250, w2, "mail", "Email", 38))
-
     cx0, cy0, cw, ch = 440, 24, 456, 272
     body.append(f'<rect x="{cx0}" y="{cy0}" width="{cw}" height="{ch}" rx="10" fill="#0d1420" stroke="{BORDER}"/>')
     body.append(f'<text x="{cx0 + 16}" y="{cy0 + 24}" class="cchead"><tspan class="ccdot">&#10035;</tspan> claude code</text>')
@@ -574,20 +560,30 @@ def profile_card():
     )
 
 
+# ---------------------------------------------------------------- contact buttons
+def contact_buttons():
+    """Standalone pill buttons so the README can wrap them in real <a> links."""
+    for name, icon, label, w in [("btn-linkedin", "linkedin", "LinkedIn", 116), ("btn-email", "mail", "Email", 96)]:
+        body = (
+            f'<rect x="1" y="1" width="{w - 2}" height="30" rx="15" fill="{SURFACE2}" stroke="{BORDER}"/>'
+            f'<use href="#i-{icon}" x="15" y="8" width="16" height="16"/>'
+            f'<text x="39" y="21" font-size="12" fill="{TEXT}">{label}</text>'
+        )
+        (OUT / f"{name}.svg").write_text(svg(w, 32, "", body, ICONS[icon]), encoding="utf-8")
+
+
+def write_part(name, part):
+    (OUT / name).write_text(
+        svg(part["w"], part["h"], part["css"], part["body"], part["defs"]), encoding="utf-8"
+    )
+
+
 if __name__ == "__main__":
     profile_card()
-    pipe = pipeline_part()
-    dash = dashboard_part()
-    left_h = pipe["h"] + 30 + dash["h"]
-    write_stack("left-col.svg", [pipe, dash])
-
-    term = terminal_part()
-    htop = htop_part()
-    # pick whale rows so both columns end at (almost) the same height
-    fixed = term["h"] + 30 + htop["h"] + 30
-    cell = 17  # CELL + GAP
-    rows = max(6, round((left_h - fixed - 40 + 4) / cell))
-    write_stack("right-col.svg", [term, htop, whale_part(rows)])
-
-    right_h = fixed + whale_part(rows)["h"]
-    print(f"left-col: {left_h}px  right-col: {right_h}px  (whale rows={rows})")
+    contact_buttons()
+    write_part("terminal.svg", terminal_part())
+    write_part("pipeline.svg", pipeline_part())
+    write_part("htop.svg", htop_part())
+    write_part("dashboard.svg", dashboard_part())
+    write_part("whale.svg", whale_part())
+    print("assets generated:", sorted(p.name for p in OUT.glob("*.svg")))
